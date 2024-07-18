@@ -8,7 +8,8 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import {RootStackParamList} from '../../App';
+import DismissKeyboardView from '../components/DismissKeyboardView';
+import {RootStackParamList} from '../../AppInner';
 
 type SignInScreenProps = NativeStackScreenProps<RootStackParamList, 'SignIn'>;
 
@@ -42,7 +43,7 @@ function SignIn({navigation}: SignInScreenProps) {
   }, [navigation]);
 
   return (
-    <View>
+    <DismissKeyboardView>
       <View style={styles.inputWrapper}>
         <Text style={styles.label}>이메일</Text>
         <TextInput
@@ -91,7 +92,7 @@ function SignIn({navigation}: SignInScreenProps) {
           <Text>회원가입하기</Text>
         </Pressable>
       </View>
-    </View>
+    </DismissKeyboardView>
   );
 }
 
