@@ -1,5 +1,6 @@
-import React, {useCallback, useRef, useState} from 'react';
+import React, {lazy, useCallback, useRef, useState} from 'react';
 import {
+  ActivityIndicator,
   Alert,
   Platform,
   Pressable,
@@ -11,10 +12,13 @@ import {
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import DismissKeyboardView from '../components/DismissKeyboardView';
 import {RootStackParamList} from '../../AppInner';
+import axios, {AxiosError} from 'axios';
+import Config from 'react-native-config';
 
 type SignUpScreenProps = NativeStackScreenProps<RootStackParamList, 'SignUp'>;
 
 function SignUp({navigation}: SignUpScreenProps) {
+  const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
@@ -31,7 +35,10 @@ function SignUp({navigation}: SignUpScreenProps) {
   const onChangePassword = useCallback((text: string) => {
     setPassword(text.trim());
   }, []);
-  const onSubmit = useCallback(() => {
+  const onSubmit = useCallback(async () => {
+    if (loading) {
+      return;
+    }
     if (!email || !email.trim()) {
       return Alert.alert('알림', '이메일을 입력해주세요.');
     }
@@ -55,8 +62,28 @@ function SignUp({navigation}: SignUpScreenProps) {
       );
     }
     console.log(email, name, password);
+    try {
+      setLoading(true);
+      console.log(Config.API_URL);
+      const res = await axios.post(`${Config.API_URL}/user`, {
+        email,
+        name,
+        password,
+      });
+      console.log(res);
+      Alert.alert('알림', '회원가입이 완료되었습니다.');
+    } catch (err) {
+      const axiosErr = (err as AxiosError<{message: string}>).response;
+      console.error();
+      if (axiosErr) {
+        Alert.alert('알림', axiosErr.data.message);
+      }
+    } finally {
+      setLoading(false);
+    }
+
     Alert.alert('알림', '회원가입 되었습니다.');
-  }, [email, name, password]);
+  }, [loading, email, name, password]);
 
   const canGoNext = email && name && password;
   return (
@@ -117,9 +144,13 @@ function SignUp({navigation}: SignUpScreenProps) {
               ? StyleSheet.compose(styles.loginButton, styles.loginButtonActive)
               : styles.loginButton
           }
-          disabled={!canGoNext}
+          disabled={!canGoNext && loading}
           onPress={onSubmit}>
-          <Text style={styles.loginButtonText}>회원가입</Text>
+          {loading ? (
+            <ActivityIndicator color="white" />
+          ) : (
+            <Text style={styles.loginButtonText}>회원가입</Text>
+          )}
         </Pressable>
       </View>
     </DismissKeyboardView>
